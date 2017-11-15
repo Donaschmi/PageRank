@@ -3,143 +3,156 @@
 import numpy as np
 import math as math
 
-def pageRankScore(A, alpha, epsilon, MAX_IT):
-    """Calculate the PageRank Score of the matrix AA contained in the file matrix.csv"""
+def pageRankScore(graph, alpha, epsilon, MAX_IT):
+    """Calculate the PageRank Score of the matrix 'graph' with the damping factor 'alpha'
+
+    Keyword arguments:
+    graph   -- the adjacency google_matrix
+    alpha   -- the damping factor
+    epsilon -- the error value
+    MAX_IT  -- The max number of iteration to be compute if it does not converge fast enough
+    """
 
     #Setup
-    my_data = A
-    N = my_data.shape[0]
-    prob_tab = stochastic_matrix(my_data, N)
-    node_tab = node_degrees(my_data, N)
-    google_tab = google_matrix(prob_tab, N, alpha)
+    my_data = graph
+    size = my_data.shape[0]                            # get the number of pages
+    prob_tab = stochastic_matrix(my_data, size)        # calculate the stochastic matrix
+    node_tab = node_degrees(my_data, size)             # calculate the entry degree of each node. It will we our guess vector for the power method
+    google_tab = google_matrix(prob_tab, size, alpha)  # calculate the google matrix
 
     #Power iteration
-    power_tab = power_method(google_tab, node_tab, N, epsilon, MAX_IT)
+    power_tab = power_method(google_tab, node_tab, size, epsilon, MAX_IT)
 
     #Write in output file
-    write_file('result.txt', A, node_tab, prob_tab, google_tab, power_tab)
+    write_file('result.txt', graph, node_tab, prob_tab, google_tab, power_tab)
     print "Score PageRank : \n"
     print power_tab, "\n"
     print "\nPour plus de detail sur les calculs effectues, consultez le fichier 'result.txt' \n"
+
     return power_tab
 
-def power_method(AA, Z, N, epsilon, MAX_IT):
+def power_method(G_matrix, guess_vector, size, epsilon, MAX_IT):
     """Calculate de right eigenvalue of the matrix AA
 
     Keyword arguments:
-    AA -- the matrix
-    Z  -- the guess vector
-    N  -- the size of each vector in AA
+    G_matrix     -- the Google matrix previously calculated
+    guess_vector -- the guess vector
+    size         -- the size of each vector in AA
+    epsilon      -- the error value
+    MAX_IT       -- The max number of iteration to be compute if it does not converge fast enough
     """
     #Setup
-    Y = Z
-    Y_norm = sum_element(Y, N)
-    Y=Y/Y_norm
+    eigenvector = guess_vector
+    eigenvector_norm = sum_element(eigenvector, size)        # calculate the norm vector of our guess_vector
+    eigenvector = eigenvector/eigenvector_norm               # we normalize our eigenvector. the sum of each element in the vector is now equal to 1
 
     #Power iteration
     for i in range(MAX_IT):
-        Y_old = Y
+        eigenvector_old = eigenvector                        # we keep the old value to calculate delta
 
-        Y = np.dot(AA, Y)
-        Y_norm = sum_element(Y, N)
-        Y=Y/Y_norm
+        eigenvector = np.dot(G_matrix, eigenvector)
+        eigenvector_norm = sum_element(eigenvector, size)
+        eigenvector = eigenvector/eigenvector_norm           # we normalize our new eigenvector
 
-        delta = np.absolute(Y - Y_old)
-        if delta.all()<epsilon:
+        delta = np.absolute(eigenvector - eigenvector_old)   # the difference between this iteration and the one before
+        if delta.all() < epsilon:                            # if delta is smaller than the epsilon value, we can keep this eigenvector
             break
 
 
-    return Y
+    return eigenvector # return the right eigenvector. the sum of each element in it is equal to 1
 
-def node_degrees(AA, N):
-    """Return an vector containing the entry degree of each node in AA
+def node_degrees(graph, size):
+    """Return a vector containing the entry degree of each node in graph
 
     Keyword arguments:
-    AA -- the matrix
-    N  -- the size of each vector in AA
+    graph -- the matrix
+    size  -- the size of each vector in graph
     """
 
-    B = np.zeros(N)
-    for i in range(0, N):
-        count = 0
-        for j in range(0, N):
-            count += AA[j][i]
-        B[i] = count
-    return B
+    return_vector = np.zeros(size) # initialize our return vector
 
-def sum_element(A, N):
-    """Calculate the sum of each element of the row A
+    for i in range(0, size):
+        count = 0
+        for j in range(0, size):
+            count += graph[j][i]
+        return_vector[i] = count   # we assign count to the page i
+    return return_vector
+
+def sum_element(vector, size):
+    """Calculate the sum of each element of vector
 
     Keyword arguments:
-    A -- the vector
-    N -- the size of the vector A
+    vector -- the vector
+    size   -- the size of vector
     """
 
     count=0
-    for i in range(0, N):
-        count += A[i]
+    for i in range(0, size): # for each element in vector
+        count += vector[i]
     return count
 
-def divide_by_N(A, N, N_elem):
-    """Return the vector A with each element divided by N_elem
+def divide_by_N(vector, size, N_elem):
+    """Return the vector with each element divided by N_elem
 
     Keyword arguments:
-    A      -- the vector
-    N      -- the size of the vector A
-    N_elem -- the value to divide each elem with in A
+    vector -- the vector
+    size   -- the size of vector
+    N_elem -- the value to divide each elem with in vector
     """
 
-    B = np.zeros(N)
-    for i in range(0, N):
+    return_vector = np.zeros(size)                # we initialize our return vector
+    for i in range(0, size):
         if N_elem != 0:
-            B[i] = A[i] / N_elem
+            return_vector[i] = vector[i] / N_elem # if N_elem is != 0, we divide each elem of vector by N_elem
         else:
-            B[i] = 1. / N
-    return B
+            return_vector[i] = 1. / size          # if N_elem == 0, we set each element of the return_vector to 1 divided by the size of vector
+    return return_vector
 
-def stochastic_matrix(AA, N):
-    """Return a matrix BB that is the stochastic matrix of AA
-
-    Keyword arguments:
-    AA -- the matrix
-    N  -- the size of the each vector in AA
-    """
-
-    BB = np.zeros((N, N))
-    for i in range(0, N):
-        N_elem =  sum_element(AA[i], N)
-        BB[i] = divide_by_N(AA[i], N, N_elem)
-    return np.transpose(BB)
-
-def google_matrix(AA, N, alpha):
-    """Return the Google matrix of AA with the damping factor alpha
+def stochastic_matrix(graph, size):
+    """Return a matrix prob_tab that is the stochastic matrix of graph
 
     Keyword arguments:
-    AA    -- the matrix
-    N     -- the size of the each vector in AA
-    alpha -- the dampin factor
+    graph -- the matrix
+    size  -- the size of the each vector in the graph
     """
 
-    BB = np.zeros((N,N))
-    for i in range(0, N):
-        for j in range(0, N):
-            BB[i][j] = AA[i][j] * alpha + (1 - alpha) / N
-    return BB
+    prob_tab = np.zeros((size, size))
+    for i in range(0, size):
+        N_elem =  sum_element(graph[i], size)
+        prob_tab[i] = divide_by_N(graph[i], size, N_elem)
+    return np.transpose(prob_tab) # we transpose it to compute the RIGHT eigenvector of our matrix
+
+def google_matrix(graph, size, alpha):
+    """Return the Google matrix of graph with the damping factor alpha
+
+    Keyword arguments:
+    graph -- the stochastic matrix
+    size  -- the size of the each vector in graph
+    alpha -- the damping factor
+    """
+
+    google_tab = np.zeros((size,size)) # initialize our new matrix of size (size,size)
+    for i in range(0, size):
+        for j in range(0, size):
+            google_tab[i][j] = graph[i][j] * alpha + (1 - alpha) / size # G_ij = alpha * P_ij + (1- alpha) / N -> the Google matrix formula
+    return google_tab
 
 
-def write_file(fileOut, A, node_tab, prob_tab, google_tab, power_tab):
+def write_file(fileOut, graph, node_tab, prob_tab, google_tab, power_tab):
     """Print the details of the PageRank Score calculation in the fileOut fileOut
 
     Keyword arguments:
     fileOut    -- the output file
-    A    -- the size of the each vector in AA
-    alpha -- the dampin factor
-
+    graph      -- the adjacency matrix
+    node_tab   -- the entry degree of each node
+    prob_tab   -- the stochastic matrix
+    google_tab -- the google matrix
+    power_tab  -- the eigenvector found with the power method
     """
     file = open(fileOut, "w")
     file.write("Calcul du score PageRank du graphe G \n")
     file.write("\nMatrice d'adjacence : \n\n")
-    file.write(np.array_str(A))
+    file.write(np.array_str(graph))
     file.write("\n\nVecteur des degres entrant : \n\n")
     file.write(np.array_str(node_tab))
     file.write("\n\nMatrice stochastique : \n\n")
@@ -154,8 +167,8 @@ def write_file(fileOut, A, node_tab, prob_tab, google_tab, power_tab):
 
 
 if __name__ == '__main__':
-    A = np.genfromtxt('matrix.csv',delimiter=',')
-    alpha = 0.85
-    epsilon = 0.001
-    MAX_IT = 1000
-    pageRankScore(A, alpha, epsilon, MAX_IT)
+    graph = np.genfromtxt('matrix.csv',delimiter=',') # load the matrix from the file matrix.csv
+    alpha = 0.85                                      # our damping factor
+    epsilon = 0.001                                   # our error value
+    MAX_IT = 1000                                     # the max number of iteration
+    pageRankScore(graph, alpha, epsilon, MAX_IT)
