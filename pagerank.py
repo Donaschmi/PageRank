@@ -3,22 +3,27 @@
 import numpy as np
 import math as math
 
-def pageRankScore(A, alpha):
+def pageRankScore(A, alpha, epsilon, MAX_IT):
     """Calculate the PageRank Score of the matrix AA contained in the file matrix.csv"""
+
+    #Setup
     my_data = A
     N = my_data.shape[0]
     prob_tab = stochastic_matrix(my_data, N)
     node_tab = node_degrees(my_data, N)
-    print prob_tab
-    print node_tab
     google_tab = google_matrix(prob_tab, N, alpha)
-    power_tab = power_method(google_tab, node_tab, N)
-    print google_tab
-    write_file('result.txt', A, node_tab, prob_tab, google_tab)
 
-    return my_data
+    #Power iteration
+    power_tab = power_method(google_tab, node_tab, N, epsilon, MAX_IT)
 
-def power_method(AA, Z, N):
+    #Write in output file
+    write_file('result.txt', A, node_tab, prob_tab, google_tab, power_tab)
+    print "Score PageRank : \n"
+    print power_tab, "\n"
+    print "\nPour plus de detail sur les calculs effectues, consultez le fichier 'result.txt' \n"
+    return power_tab
+
+def power_method(AA, Z, N, epsilon, MAX_IT):
     """Calculate de right eigenvalue of the matrix AA
 
     Keyword arguments:
@@ -26,27 +31,25 @@ def power_method(AA, Z, N):
     Z  -- the guess vector
     N  -- the size of each vector in AA
     """
+    #Setup
     Y = Z
-    for i in range(0,3):
+    Y_norm = sum_element(Y, N)
+    Y=Y/Y_norm
+
+    #Power iteration
+    for i in range(MAX_IT):
+        Y_old = Y
+
         Y = np.dot(AA, Y)
-        Y_norm = norm_vector(Y, N)
-        Y = Y / Y_norm
+        Y_norm = sum_element(Y, N)
+        Y=Y/Y_norm
+
+        delta = np.absolute(Y - Y_old)
+        if delta.all()<epsilon:
+            break
+
 
     return Y
-
-def norm_vector(A, N):
-    """Calculate the norm vector of A
-
-    Keyword arguments:
-    A -- the vector
-    N -- the size of the vector A
-    """
-
-    sum_vector = 0
-    for i in range(0, N):
-        sum_vector += A[i] * A[i]
-    return math.sqrt(sum_vector)
-
 
 def node_degrees(AA, N):
     """Return an vector containing the entry degree of each node in AA
@@ -122,8 +125,18 @@ def google_matrix(AA, N, alpha):
         for j in range(0, N):
             BB[i][j] = AA[i][j] * alpha + (1 - alpha) / N
     return BB
-def write_file(file, A, node_tab, prob_tab, google_tab):
-    file = open("result.txt", "w")
+
+
+def write_file(fileOut, A, node_tab, prob_tab, google_tab, power_tab):
+    """Print the details of the PageRank Score calculation in the fileOut fileOut
+
+    Keyword arguments:
+    fileOut    -- the output file
+    A    -- the size of the each vector in AA
+    alpha -- the dampin factor
+
+    """
+    file = open(fileOut, "w")
     file.write("Calcul du score PageRank du graphe G \n")
     file.write("\nMatrice d'adjacence : \n\n")
     file.write(np.array_str(A))
@@ -133,7 +146,16 @@ def write_file(file, A, node_tab, prob_tab, google_tab):
     file.write(np.array_str(prob_tab))
     file.write("\n\nMatrice Google : \n\n")
     file.write(np.array_str(google_tab))
+    file.write("\n\nScore PageRank : \n\n")
+    file.write(np.array_str(power_tab))
+    file.write("\n")
     return
-A = np.genfromtxt('matrix.csv',delimiter=',')
-alpha = 0.85
-pageRankScore(A, alpha)
+
+
+
+if __name__ == '__main__':
+    A = np.genfromtxt('matrix.csv',delimiter=',')
+    alpha = 0.85
+    epsilon = 0.001
+    MAX_IT = 1000
+    pageRankScore(A, alpha, epsilon, MAX_IT)
