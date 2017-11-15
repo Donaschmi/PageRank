@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""PageRank algorithm
+
+Ce programme permet de calculer le score PageRank d'un graphe dont
+la matrice d'adjacence se situe dans le fichier 'matrix.csv'
+
+Example:
+    $ python pagerank.py
+"""
 
 import numpy as np
 import math as math
@@ -27,7 +36,7 @@ def pageRankScore(graph, alpha, epsilon, MAX_IT):
     write_file('result.txt', graph, node_tab, prob_tab, google_tab, power_tab)
     print "Score PageRank : \n"
     print power_tab, "\n"
-    print "\nPour plus de detail sur les calculs effectues, consultez le fichier 'result.txt' \n"
+    print "\nPour plus de détail sur les calculs effectués, consultez le fichier 'result.txt' \n"
 
     return power_tab
 
