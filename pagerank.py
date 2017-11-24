@@ -12,7 +12,7 @@ Example:
 import numpy as np
 import math as math
 
-def pageRankScore(graph, alpha, epsilon, MAX_IT):
+def pageRankScore(graph, alpha, epsilon, MAX_ITE):
     """Calculate the PageRank Score of the matrix 'graph' with the damping factor 'alpha'
 
     Keyword arguments:
@@ -30,7 +30,7 @@ def pageRankScore(graph, alpha, epsilon, MAX_IT):
     google_tab = google_matrix(prob_tab, size, alpha)  # calculate the google matrix
 
     #Power iteration
-    power_tab = power_method(google_tab, node_tab, size, epsilon, MAX_IT)
+    power_tab = power_method(google_tab, node_tab, size, epsilon, MAX_ITE)
 
     #Write in output file
     write_file('result.txt', graph, node_tab, prob_tab, google_tab, power_tab)
@@ -173,11 +173,12 @@ def write_file(fileOut, graph, node_tab, prob_tab, google_tab, power_tab):
     file.write("\n")
     return
 
-
-
-if __name__ == '__main__':
+def main():
     graph = np.genfromtxt('matrix.csv',delimiter=',') # load the matrix from the file matrix.csv
     alpha = 0.85                                      # our damping factor
     epsilon = 0.001                                   # our error value
-    MAX_IT = 1000                                     # the max number of iteration
-    pageRankScore(graph, alpha, epsilon, MAX_IT)
+    MAX_ITE = 1000                                    # the max number of iteration
+    pageRankScore(graph, alpha, epsilon, MAX_ITE)
+
+if __name__ == '__main__':
+    main()
