@@ -12,7 +12,7 @@ Example:
 import numpy as np
 import math as math
 
-def pageRankScore(graph, alpha):
+def PageRank(graph, alpha):
     """Calculate the PageRank Score of the matrix 'graph' with the damping factor 'alpha'
 
     Keyword arguments:
@@ -167,7 +167,7 @@ def write_file(fileOut, graph, node_tab, prob_tab, google_tab, power_tab):
 def main():
     graph = np.genfromtxt('matrix.csv',delimiter=',') # load the matrix from the file matrix.csv
     alpha = 0.85                                      # our damping factor
-    pageRankScore(graph, alpha)
+    PageRank(graph, alpha)
 
 if __name__ == '__main__':
     main()
