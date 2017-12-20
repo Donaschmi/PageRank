@@ -12,14 +12,12 @@ Example:
 import numpy as np
 import math as math
 
-def pageRankScore(graph, alpha, epsilon, MAX_ITE):
+def pageRankScore(graph, alpha):
     """Calculate the PageRank Score of the matrix 'graph' with the damping factor 'alpha'
 
     Keyword arguments:
     graph   -- the adjacency google_matrix
     alpha   -- the damping factor
-    epsilon -- the error value
-    MAX_IT  -- The max number of iteration to be compute if it does not converge fast enough
     """
 
     #Setup
@@ -30,7 +28,7 @@ def pageRankScore(graph, alpha, epsilon, MAX_ITE):
     google_tab = google_matrix(prob_tab, size, alpha)  # calculate the google matrix
 
     #Power iteration
-    power_tab = power_method(google_tab, node_tab, size, epsilon, MAX_ITE)
+    power_tab = power_method(google_tab, node_tab, size)
 
     #Write in output file
     write_file('result.txt', graph, node_tab, prob_tab, google_tab, power_tab)
@@ -40,15 +38,13 @@ def pageRankScore(graph, alpha, epsilon, MAX_ITE):
 
     return power_tab
 
-def power_method(G_matrix, guess_vector, size, epsilon, MAX_IT):
+def power_method(G_matrix, guess_vector, size):
     """Calculate de right eigenvalue of the matrix AA
 
     Keyword arguments:
     G_matrix     -- the Google matrix previously calculated
     guess_vector -- the guess vector
     size         -- the size of each vector in AA
-    epsilon      -- the error value
-    MAX_IT       -- The max number of iteration to be compute if it does not converge fast enough
     """
     #Setup
     eigenvector = guess_vector
@@ -56,17 +52,12 @@ def power_method(G_matrix, guess_vector, size, epsilon, MAX_IT):
     eigenvector = eigenvector/eigenvector_norm               # we normalize our eigenvector. the sum of each element in the vector is now equal to 1
 
     #Power iteration
-    for i in range(MAX_IT):
+    for i in range(3):
         eigenvector_old = eigenvector                        # we keep the old value to calculate delta
 
         eigenvector = np.dot(G_matrix, eigenvector)
         eigenvector_norm = sum_element(eigenvector, size)
         eigenvector = eigenvector/eigenvector_norm           # we normalize our new eigenvector
-
-        delta = np.absolute(eigenvector - eigenvector_old)   # the difference between this iteration and the one before
-        if delta.all() < epsilon:                            # if delta is smaller than the epsilon value, we can keep this eigenvector
-            break
-
 
     return eigenvector # return the right eigenvector. the sum of each element in it is equal to 1
 
@@ -176,9 +167,7 @@ def write_file(fileOut, graph, node_tab, prob_tab, google_tab, power_tab):
 def main():
     graph = np.genfromtxt('matrix.csv',delimiter=',') # load the matrix from the file matrix.csv
     alpha = 0.85                                      # our damping factor
-    epsilon = 0.001                                   # our error value
-    MAX_ITE = 1000                                    # the max number of iteration
-    pageRankScore(graph, alpha, epsilon, MAX_ITE)
+    pageRankScore(graph, alpha)
 
 if __name__ == '__main__':
     main()
